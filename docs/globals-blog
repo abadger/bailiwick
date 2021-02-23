@@ -1,0 +1,114 @@
+Pattern or Antipattern: Globals in Python
+
+"Global variables are evil."
+
+You'd be hard pressed to find any programmer who hasn't heard this mantra at least once in their life.
+
+=================
+Usages of globals
+=================
+
+
+Global Constants
+================
+
+globals.py:
+
+BUFFER_SIZE = 4096
+
+data_parser.py:
+
+import globals
+
+for chunk in stream.read(globals.BUFFER_SIZE):
+    do_something(chunk)
+
+
+Is this really any different than:
+streamreader.py:
+
+def readstream(stream):
+    return stream.read(4096)
+
+data_parser.py:
+
+import streamreader
+
+for chunk in streamreader.readstream(stream):
+    do_something(chunk)
+
+
+Global "Constants"
+==================
+
+config.py:
+
+import os
+import configparser
+
+_cfg = configparser.ConfigParser('configfile')
+
+def get_config(KEY, default):
+    if KEY in os.environ:
+        value = os.environ[KEY]
+    elif KEY in _cfg:
+        value = _cfg[KEY]
+    else:
+        value = default
+    return value
+
+BUFFER_SIZE = get_config(MYAPP_BUFFER_SIZE, 4096)
+
+
+data_parser.py:
+
+import config
+
+for chunk in stream.read(config.BUFFER_SIZE):
+    do_something(chunk)
+
+
+
+Global "Singletons"
+===================
+
+service.py:
+
+class Service:
+    def __init__(self):
+        self.index = 0
+        self.client_id = 'Number 6'
+
+    def request(self, req):
+        # The service's protocol requires some sort of state.  Here, it requires that we tell it how many requests we've already made.
+        self.send(self.client_id, request_number=self.index, request=req)
+        self.index += 1
+
+service = Service()
+
+
+data_parser.py:
+
+import service
+
+service.service(request)
+
+
+===================================
+Traditional shortcomings of globals
+===================================
+
+* Hidden side-effects
+  - Use immutable globals.
+  - for stateful utility classes like the global "singleton", the utility class must deal with side-effects
+* Hidden dependencies
+  - In python. globals can be less hidden than the alternatives.  This is because globals are only local to a file.  You must import the globals, thus establishing a visible link
+* Safety for parallel execution
+  - immutable globals are okay.  Utility classes with side effects need to deal with those side effects (for instance, locking around changes to their mutable state).
+* Introduce problems for unittesting
+  - Monkeypatching
+* Namespace pollution
+  - In python, the globals are local to a file.  So namespacing is preserved in the use cases we're talking about.
+* Non-locality.  Changes to globals happen in one file but their effects are felt throughout the code
+  - This happens in the use case regardless.
+  

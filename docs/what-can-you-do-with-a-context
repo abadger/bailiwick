@@ -1,0 +1,10 @@
+After reading and reading and reading, I think I've identified two main use cases for contexts:
+
+* A context is a private variable on which code operates
+* A context is an environment in which a portion of code runs
+
+Both of these things are primarily storage for the code but their use cases are slightly different.
+
+As a private variable, the usage of a context looks something like this:
+
+def checksum(
