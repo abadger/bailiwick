@@ -1,6 +1,7 @@
 import pytest
 
 import bailiwick
+import bailiwick.context
 import bailiwick.errors
 
 
@@ -12,14 +13,14 @@ def simple_ctx():
     ctx = bailiwick.create_context('test', DATA)
     ctx.freeze()
     yield ctx
-    del bailiwick.context._context.get()['test']
+    del bailiwick.context._CONTEXT.get()['test']
 
 
 def test_create_ctx():
     app_ctx = bailiwick.create_context('app', DATA)
     app_ctx.freeze()
     assert app_ctx['data'] == 0
-    del bailiwick.context._context.get()['app']
+    del bailiwick.context._CONTEXT.get()['app']
 
 
 def test_error_creating_created_ctx(simple_ctx):
@@ -30,9 +31,6 @@ def test_error_creating_created_ctx(simple_ctx):
 def test_get_ctx(simple_ctx):
     ctx = bailiwick.get_context('test')
     assert ctx is simple_ctx
-    print(ctx)
-    print(type(ctx))
-    print(ctx.keys())
     assert ctx['data'] == 0
 
 
