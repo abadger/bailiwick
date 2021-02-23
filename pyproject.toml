@@ -4,7 +4,7 @@ build-backend = "poetry.masonry.api"
 
 [tool.poetry]
 name = "bailiwick"
-version = "0.1"
+version = "0.0.0.dev0"
 description = "Manage program contexts"
 authors = ["Toshio Kuratomi <a.badger@gmail.com>"]
 license = "LGPL-3.0-or-later"
@@ -13,6 +13,18 @@ repository = "https://github.com/abadger/bailiwick"
 packages = [
     { include = "bailiwick" },
     { include = "tests", format = "sdist" }
+]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Topic :: Software Development :: Libraries :: Python Modules"
 ]
 
 [tool.poetry.dependencies]
