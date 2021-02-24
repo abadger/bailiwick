@@ -6,7 +6,7 @@
 import contextvars
 import typing as t
 
-from .context_dict import ContextDict
+from .collections import ContextDict
 from .errors import DuplicateContext
 
 

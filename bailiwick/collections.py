@@ -33,12 +33,12 @@ def identity_freezer(obj: t.Any) -> t.Any:
 
 class DefaultFreezer:
     def __init__(self, pre_rules: t.Optional[t.Sequence] = None,
-                 post_rules: t.Optional[t.Sequence] = None):
-        self.pre_rules = pre_rules or []
-        self._rules = (string_freezer, bytes_freezer, self.mapping_freezer,
-                       self.sequence_freezer, self.set_freezer)
+                 post_rules: t.Optional[t.Sequence] = None) -> None:
+        self.pre_rules: t.Sequence = pre_rules or tuple()
+        self._rules: t.Sequence = (string_freezer, bytes_freezer, self.mapping_freezer,
+                                   self.sequence_freezer, self.set_freezer)
 
-        self.post_rules = post_rules or []
+        self.post_rules: t.Sequence = post_rules or tuple()
 
     def mapping_freezer(self, obj: t.Any) -> 'ContextDict':
         if not isinstance(obj, Mapping):
@@ -54,7 +54,7 @@ class DefaultFreezer:
         new_dict._frozen = True
         return new_dict
 
-    def _make_contained_containers_immutable(self, obj):
+    def _make_contained_containers_immutable(self, obj: t.Union[Sequence, Set]) -> t.List:
         new_list = []
         for value in obj:
             if isinstance(value, Container):
@@ -84,22 +84,22 @@ class DefaultFreezer:
 
         return obj
 
+
 class ContextDict(Mapping):
-    def __init__(self, *args, **kwargs):
-        self._store = dict(*args, **kwargs)
-        self._must_be_frozen = True
-        self.freezer = DefaultFreezer()
-        self._frozen = False
+    def __init__(self, *args, **kwargs) -> None:
+        self._store: t.Mapping = dict(*args, **kwargs)
+        self._must_be_frozen: bool = True
+        self.freezer: t.Callable[[t.Any], t.Any] = DefaultFreezer()
+        self._frozen: bool = False
 
     @classmethod
     def new(cls, ctx_data: t.Mapping,
             must_be_frozen: bool = True,
-            freezer: t.Optional[t.Callable] = None) -> 'ContextDict':
+            freezer: t.Optional[t.Callable[[t.Any], t.Any]] = None) -> 'ContextDict':
         ctx = ContextDict(ctx_data)
 
-        if freezer is None:
-            freezer = DefaultFreezer()
-        ctx.freezer = freezer
+        if freezer is not None:
+            ctx.freezer = freezer
 
         ctx._must_be_frozen = must_be_frozen
         ctx._frozen = False
@@ -107,27 +107,27 @@ class ContextDict(Mapping):
         return ctx
 
     @property
-    def frozen(self):
+    def frozen(self) -> bool:
         return self._frozen
 
-    def freeze(self):
+    def freeze(self) -> None:
         self.freezer(self._store)
         self._frozen = True
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: t.Hashable) -> t.Any:
         if not self.frozen:
             if self._must_be_frozen:
                 raise MustBeFrozen('This ContextDict must be frozen before accessing'
                                    ' its members.')
         return self._store[key]
 
-    def __iter__(self):
+    def __iter__(self) -> t.Any:
         return self._store.__iter__()
 
-    def __len__(self):
+    def __len__(self) -> int:
         return self._store.__len__()
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         if self.frozen:
             return hash(frozenset(self.items()))
         raise MustBeFrozen('A ContextDict must be frozen before it can be hashed')
