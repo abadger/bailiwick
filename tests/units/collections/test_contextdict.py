@@ -159,16 +159,27 @@ class TestMappingFeatures:
         with pytest.raises(bailiwick.errors.MustBeFrozen):
             hash(ctx_dict)
 
-    def test_equality_unfrozen(self, ctx_dict):
+    def test_equality_unfrozen_equal(self, ctx_dict):
         assert ctx_dict == DATA_DICT
         assert DATA_DICT == ctx_dict
         assert ctx_dict == bc.ContextDict(DATA_TUPLE)
 
-    def test_equality_frozen(self, ctx_dict):
+    def test_equality_frozen_equal(self, ctx_dict):
         ctx_dict.freeze()
         assert ctx_dict == DATA_DICT
         assert DATA_DICT == ctx_dict
         assert ctx_dict == bc.ContextDict(DATA_TUPLE)
+
+    def test_equality_unfrozen_unequal(self, ctx_dict):
+        assert ctx_dict != bc.ContextDict({'three': 3})
+
+    def test_equality_frozen_unequal(self, ctx_dict):
+        ctx_dict.freeze()
+        other = bc.ContextDict({'three': 3})
+        assert ctx_dict != other
+
+        other.freeze()
+        assert ctx_dict != other
 
     def test_repr(self, ctx_dict):
         output = repr(ctx_dict)
