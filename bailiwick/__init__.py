@@ -3,4 +3,6 @@
 # License: LGPLv3+
 # Copyright: Toshio Kuratomi, 2021
 
-from .context import create_context, get_context
+# Imports in this file enable use of common functionality directly from the
+# bailiwick namespace. Thus disable unused imports
+from .context import create_context, get_context  # noqa: F401
