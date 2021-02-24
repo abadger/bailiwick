@@ -45,7 +45,7 @@ class DefaultFreezer:
             raise FreezeRuleDoesNotMatch
 
         new_dict = {}
-        for key, value in new_dict.items():
+        for key, value in obj.items():
             if isinstance(value, Container):
                 value = self.__call__(value)
             new_dict[key] = value
@@ -87,7 +87,7 @@ class DefaultFreezer:
 
 class ContextDict(Mapping):
     def __init__(self, *args, **kwargs) -> None:
-        self._store: t.Mapping = dict(*args, **kwargs)
+        self._store: t.Dict = dict(*args, **kwargs)
         self._must_be_frozen: bool = True
         self.freezer: t.Callable[[t.Any], t.Any] = DefaultFreezer()
         self._frozen: bool = False
@@ -115,7 +115,7 @@ class ContextDict(Mapping):
         return self._frozen
 
     def freeze(self) -> None:
-        self.freezer(self._store)
+        self._store: ContextDict = self.freezer(self._store)
         self._frozen = True
 
     def __getitem__(self, key: t.Hashable) -> t.Any:
@@ -140,8 +140,9 @@ class ContextDict(Mapping):
         try:
             if self.__hash__() == hash(other):
                 return True
-        except TypeError:
-            pass
+        except (TypeError, MustBeFrozen):
+            if self._store == other:
+                return True
 
         return False
 
@@ -160,3 +161,42 @@ class ContextDict(Mapping):
         new_ctx._must_be_frozen = self._must_be_frozen
         new_ctx.freezer = self.freezer
         return new_ctx
+
+    #
+    # The following are only allowed while ContextDict is unfrozen
+    #
+
+    def __delitem__(self, key):
+        if self.frozen:
+            raise TypeError('ContextDict object does not support item deletion once frozen')
+        del self._store[key]
+
+    def __setitem__(self, key: t.Hashable, value: t.Any) -> None:
+        if self.frozen:
+            raise TypeError('ContextDict object does not support item assignment once frozen')
+        self._store[key] = value
+
+    def clear(self) -> None:
+        if self.frozen:
+            raise AttributeError('ContextDict object does not support clear() once frozen')
+        return self._store.clear()
+
+    def pop(self, *args) -> t.Any:
+        if self.frozen:
+            raise AttributeError('ContextDict object does not support pop() once frozen')
+        return self._store.pop(*args)
+
+    def popitem(self) -> t.Tuple[t.Hashable, t.Any]:
+        if self.frozen:
+            raise AttributeError('ContextDict object does not support popitem() once frozen')
+        return self._store.popitem()
+
+    def setdefault(self, key: t.Hashable, default: t.Any = None) -> t.Any:
+        if self.frozen:
+            raise AttributeError('ContextDict object does not support setdefault() once frozen')
+        return self._store.setdefault(key, default)
+
+    def update(self, *args, **kwargs) -> None:
+        if self.frozen:
+            raise AttributeError('ContextDict object does not support update() once frozen')
+        return self._store.update(*args, **kwargs)
