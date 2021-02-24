@@ -93,9 +93,13 @@ class ContextDict(Mapping):
         self._frozen: bool = False
 
     @classmethod
-    def new(cls, ctx_data: t.Mapping,
+    def new(cls, ctx_data: t.Optional[t.Mapping] = None,
             must_be_frozen: bool = True,
             freezer: t.Optional[t.Callable[[t.Any], t.Any]] = None) -> 'ContextDict':
+
+        if ctx_data is None:
+            ctx_data = {}
+
         ctx = ContextDict(ctx_data)
 
         if freezer is not None:
@@ -132,7 +136,7 @@ class ContextDict(Mapping):
             return hash(frozenset(self.items()))
         raise MustBeFrozen('A ContextDict must be frozen before it can be hashed')
 
-    def __eq__(self, other):
+    def __eq__(self, other: t.Any) -> bool:
         try:
             if self.__hash__() == hash(other):
                 return True
@@ -141,11 +145,11 @@ class ContextDict(Mapping):
 
         return False
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return (f'ContextDict({repr(self._store)}, must_be_frozen={self._must_be_frozen},'
                 f' freezer={self.freezer})')
 
-    def union(self, overriding_mapping):
+    def union(self, overriding_mapping: t.Mapping) -> 'ContextDict':
         """
         Create a new ContextDict as a combination of the original and an overriding_mapping.
 
@@ -155,5 +159,4 @@ class ContextDict(Mapping):
         new_ctx = ContextDict(self._store, **overriding_mapping)
         new_ctx._must_be_frozen = self._must_be_frozen
         new_ctx.freezer = self.freezer
-        new_ctx.frozen = False
         return new_ctx
